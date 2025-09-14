@@ -134,8 +134,7 @@
                 if(isset($_SESSION['error'])){
                     echo 'errore: '.$_SESSION['error'];
                 }
-                unset($_SESSION['error']);
-                
+                session_destroy();
             ?>
 
             <form action="elaboraLogin" method="POST">

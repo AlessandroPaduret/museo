@@ -130,20 +130,9 @@
             <h1 class="text-center"><b>Registrati</b></h1>
 
             <?php
-                if(isset($_SESSION['error'])){
-                  echo '<!-- card 00 -->
-                    <div class="card" style="width: 100%;">
-                      <div class="card-body">
-                        <h5 class="card-title" style="font-size:250%"><b>Errore:</b></h5>
-                        <h5 class="text-center"">'.$_SESSION['error'].'</h5>
-                      </div>
-                    </div>
-                  <!-- fine card 00 -->
-                  <br>';
+                if(isset($_SESSION['user'])){
+                    echo 'errore: '.$_SESSION['user']["error"];
                 }
-                
-                unset($_SESSION['error']);
-                
             ?>
 
             <form action="elaboraSignin" method="POST">
