@@ -29,8 +29,6 @@
             if(isset($_SESSION['user']) ) {
                 $user = $_SESSION['user'];
                 $logged = self::log($user["username"], $user["passw"]);
-            } else {
-                session_destroy();
             }
             require_once "app/view/utente/login.php";
         }
@@ -126,6 +124,7 @@
             if(is_array($user) && self::log($user["username"], $user["passw"]) ){//se il tipo e' loggato mostra form
                 $user = $_SESSION["user"];
                 $biglietti =  userModel::getBigliettiByUtente($user["username"]);
+                $accessori = userModel::getAccessoriByUtente($user["username"]);
                 $logged = self::log($user["username"], $user["passw"]);
                 require_once "app/view/utente/iMieiBiglietti.php";
             }else{ //se non e' loggato manda alla pagina login per verificare gli errori
@@ -133,6 +132,26 @@
                 die();
             }
         }
+        /*
+
+        public static function semplificaBiglietti($array){
+            $semplificato = array();
+            foreach ($array as $key => $value){
+                $precedente = $array[$key];
+                if($key == 0){}
+                else{
+
+                    if($array[$key]["codTransazione"] == $precedente["codTransazione"]){
+                        $semplificato[ $array[$key]["codTransazione"] ] = 
+                    }
+
+
+                    $precedente = $array[$key];
+                }
+            }
+
+        }
+        */
 
         //cambio di controller
         public static function homepage(){ //view dell'index
@@ -152,10 +171,10 @@
             die();
         }
 
-
-
-
-
+        public static function eventiFuturi(){
+            header("Location: /eventi/index"); //rimanda ad un'altro controller
+            die();
+        }
         
         // dopo c'e' la parte logica del sito
 

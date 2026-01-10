@@ -148,11 +148,62 @@
             <?php 
                 if(is_array($biglietti)){
                     $codTransazione = -1;
-                    $idBiglietto = -1;
+                    $nome = "";
                     $idServizio = -1;
-                    foreach($biglietti as $biglietto){
+                    $categoriaPrecedente = -1;
+                    $totale = 0;
 
-                        if (!($codTransazione == $biglietto["codTransazione"])){ //se c'e un nuovo aquisto
+                    $transazionePrecedente = $biglietti[0]["codTransazione"];
+                   
+                    foreach($biglietti as $key => $biglietto){
+
+                        
+
+                        if (!($codTransazione == $biglietto["codTransazione"])){ //se c'e un nuovo aquisto:cambia l'acquisto
+
+
+                            
+
+                            if($codTransazione ==-1) {}//se è la prima volta non chiudo la card altrimenti a ogni cambio si chiude la card
+                            else{
+
+                              //inserimento accessori
+                              foreach ($accessori as $accessorio) {//se la transazione è giusta aggiungi accessiorio dal pool totale degli accessori
+                                //echo var_dump("if: ",$key == count($biglietti) - 1,"<br><br>key: ", $key,"<br><br>count: ", count($biglietti));
+                                if( $accessorio["codTransazione"] == $codTransazione ){
+                                  echo '<div class="row justify-content-center align-items-center">';
+                                  echo '<div class="col text-center">';
+                                  echo '<h4>Accessorio: '.$accessorio['descrizione'].' - € '.$accessorio['prezzoAPersona'].'</h4>';
+                                  echo '</div>';
+                                  echo '<div class="col text-center">';
+                                  echo '<h4 class="ms-5">€ '.$accessorio['prezzoAPersona'].'</h4>';
+                                  echo '</div>';
+                                  echo '</div><!-- fine row -->';
+                                  $totale +=round($accessorio['prezzoAPersona']);
+                                }
+                              } 
+
+                              
+                              
+                              //echo "chiudiiiiiii";
+
+                              //chiusura card
+                              echo '<hr>';
+                              echo '<div class="row">';
+                              echo '<div class="col align-items-center">';
+                              echo '<h5 class="card-title" style="font-size:270%"><b>Totale:</b></h5>';
+                              echo '</div>';
+                              echo '<div class="col text-center d-flex align-items-center">';
+                              echo '<h6 style="margin: 0 auto; width:70%; font-size:190%">€ '.$totale.'</h6>';
+                              echo '</div>';
+                              echo '</div><!-- fine row -->';
+                              echo '</div>';
+                              echo '</div><!-- fine card -->';
+                              echo '<br>';
+                              $totale = 0;
+                            }
+
+                            $nome = "";
                             $codTransazione = $biglietto["codTransazione"];
                             echo '<div class="card" style="width: 100%;">';
                             echo '<div class="card-body">';
@@ -160,38 +211,56 @@
                             echo '<h5 class="card-title" style="font-size:160%"><b>valido dal '.$biglietto['dataInizio'].' al '.$biglietto['dataFine'].'</b></h5>';
                             echo '<a href="dettagliEvento/'.$biglietto['idVisita'].'" id="link" class="text-center p-3">Vai all\'evento</a>';
                             echo '<br>';
-                        }
+                      }
+                        
 
-                        if(!($idBiglietto == $biglietto['idBiglietto'])){ //se c'e un nuovo biglietto
-                            $idBiglietto = $biglietto['idBiglietto'];
+                        if(!($nome == $biglietto['nome'])){ //se c'e un nuova categoria
+                        
+                            $nome = $biglietto['nome'];
                             echo '<div class="row justify-content-center align-items-center">';
                             echo '<div class="col text-center">';
-                            echo '<h4>Biglietto '.$biglietto['nomeCategoria'].', € '.$biglietto['prezzo'].' x qta</h4>';
+                            echo '<h4>Biglietto: '.$biglietto['nome'].' - € '.round($biglietto['Prezzo']).' x '.$biglietto['NumeroBiglietti'].'</h4>';
                             echo '</div>';
                             echo '<div class="col text-center">';
-                            echo '<h4 class="ms-5">€ tot dei biglietti</h4>';
+                            echo '<h4 class="ms-5">€ '.round($biglietto['Prezzo'])*$biglietto['NumeroBiglietti'].'</h4>';
                             echo '</div>';
                             echo '</div><!-- fine row -->';
-                        }
 
-                        if(isset($biglietto['codServizio'])){
-                            echo '<div class="row justify-content-center align-items-center">';
-                            echo '<div class="col text-center">';
-                            echo '<h4>'.$biglietto['nomeServizio'].', € '.$biglietto['prezzoServizio'].' x qta</h4>';
-                            echo '</div>';
-                            echo '<div class="col text-center">';
-                            echo '<h4 class="ms-5">€ tot dei servizi</h4>';
-                            echo '</div>';
-                            echo '</div><!-- fine row -->';
+                            $totale +=round(round($biglietto['Prezzo'])*$biglietto['NumeroBiglietti']);
+
+
                         }
+                          
+                            
+                        
+
+                        
                     }
-                    echo '<hr>';
+
+                        //inserimento accessori
+                        foreach ($accessori as $accessorio) {//se la transazione è giusta aggiungi accessiorio dal pool totale degli accessori
+                          //echo var_dump("if: ",$key == count($biglietti) - 1,"<br><br>key: ", $key,"<br><br>count: ", count($biglietti));
+                          if( $accessorio["codTransazione"] == $codTransazione ){
+                            echo '<div class="row justify-content-center align-items-center">';
+                            echo '<div class="col text-center">';
+                            echo '<h4>Accessorio: '.$accessorio['descrizione'].' - € '.$accessorio['prezzoAPersona'].'</h4>';
+                            echo '</div>';
+                            echo '<div class="col text-center">';
+                            echo '<h4 class="ms-5">€ '.$accessorio['prezzoAPersona'].'</h4>';
+                            echo '</div>';
+                            echo '</div><!-- fine row -->';
+                            $totale +=round($accessorio['prezzoAPersona']);
+                          }
+                        }
+                        
+                        //fine fine
+                        echo '<hr>';
                         echo '<div class="row">';
                         echo '<div class="col align-items-center">';
                         echo '<h5 class="card-title" style="font-size:270%"><b>Totale:</b></h5>';
                         echo '</div>';
                         echo '<div class="col text-center d-flex align-items-center">';
-                        echo '<h6 style="margin: 0 auto; width:70%; font-size:190%">€ XX.XX</h6>';
+                        echo '<h6 style="margin: 0 auto; width:70%; font-size:190%">€ '.$totale.'</h6>';
                         echo '</div>';
                         echo '</div><!-- fine row -->';
                         echo '</div>';

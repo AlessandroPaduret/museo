@@ -56,17 +56,22 @@
             trova l'evento, le categorie ammesse e gli accessori disponibili nel db e li mostra 
             */
 
-            $id = $params[0];
-
-            $evento = eventoModel::getEventoById($id);
+            
 
             session_start();
+            //controllo login
             if(isset($_SESSION['user']) ) {
                 $user = $_SESSION['user'];
                 $logged = self::log($user["username"], $user["passw"]);
             } else {
                 session_destroy();
+                header('Location: /eventi/index');//rimanda agli eventi futuri
+                die();
             }
+
+            $id = $params[0];
+
+            $evento = eventoModel::getEventoById($id);
 
             if(strtotime($evento["dataInizio"]) > time() ){
                 $accessori = eventoModel::getAccessoriByEvento($id);
@@ -117,15 +122,25 @@
             altrimenti manda alla form di signin
             */
             session_start();
-            var_dump(isset($_SESSION["evento"]));
+            //controllo login
+            if(isset($_SESSION['user']) ) {
+                $user = $_SESSION['user'];
+                $logged = self::log($user["username"], $user["passw"]);
+            } else {
+                session_destroy();
+                header('Location: /utente/index');//rimanda agli eventi futuri
+                die();
+            }
 
             $id = $params[0];
             
             
             $user = $_SESSION["user"];
-            var_dump($user);
-            echo "dsfggrergerwggegerafgsergherasg";
+
+            $_SESSION['idVisita'] = $id;
+
             if(is_array($_SESSION["user"]) && self::log($user['username'],$user['passw'])){ //se il tipo e' loggato
+
                 $user = $_SESSION["user"];
                 $evento = eventoModel::getEventoById( $id );
                 $accessori = eventoModel::getAccessoriByEvento($id);
@@ -141,28 +156,37 @@
 
         //parte logica
 
-        public function elaboraAcquistaBiglietto(){
+        public static function elaboraAcquistaBiglietto(){
             
             /*controlla se l'utente e' loggato e se ci sono accessori e categorie dentro post in input 
             se si fa vedere tutte
             altrimenti manda alla form di signin
             */
             session_start();
-            var_dump($_SESSION);
-            var_dump($_POST);
+            //controllo login
+            if(isset($_SESSION['user']) ) {
+                $user = $_SESSION['user'];
+                $logged = self::log($user["username"], $user["passw"]);
+            } else {
+                session_destroy();
+                header('Location: /utente/index');//rimanda agli eventi futuri
+                die();
+            }
 
             
-            
-            
+
+            $bigliettoMinimo = 0;
 
             foreach ($_POST as $key => $value) {
                 $dato = explode('/', $key);
 
                 if($dato[0]=='categoria'){
-                    $categorie[$dato[1]] =$value;
+                    $categorie[$dato[1]]["codCategoria"] = (int) $dato[1];
+                    $categorie[$dato[1]]["qta"] = (int) $value;
+                    $bigliettoMinimo += (int) $value;
 
                 }else if($dato[0]=='accessorio'){
-                    $accessori[] = $dato[1];
+                    $accessori[$dato[1]]["codServizio"] = (int) $dato[1];
 
                 }else{
                     //header('Location: /eventi/index');//rimanda agli eventi futuri
@@ -171,50 +195,194 @@
                 
             }
 
-            $_SESSION['AccessoriAcquistati'] = $accessori;
-            $_SESSION['CategorieAcquistate'] = $categorie;
+            $_SESSION['categorie'] = $categorie;
+            $_SESSION['accessori'] = $accessori;
+            $_SESSION['dataBiglietto'] = $_POST["dataBiglietto"];
 
-            header("Location: /eventi/inserisciCarta");
+            if($bigliettoMinimo == 0){
+                $_SESSION["error"] = "compra almeno un biglietto";
+                header('Location: /eventi/acquistaBiglietto/'.$_SESSION['idVisita']);//rimanda agli eventi futuri
+                die(); 
+            }
+
+            header("Location: /eventi/pagamento");
             die();
 
-            /*
+        }
+
+        public static function pagamento(){
             session_start();
-            if(isset($_SESSION["user"]) && $_SESSION["user"] -> login()){ //se il tipo e' loggato
-                $user = $_SESSION["user"];
-                $evento = new eventoModel($idEvento);
-                $evento -> caricaDati();
-                $accessiori = $evento -> getAccessori();
-                $categorie = $evento -> getCategorie();
-                require_once "app/template/eventi/acquistaBiglietto.php";
-            }else{ //se non e' loggato manda alla pagina signin per verificare gli errori
-                header("Location: /utente/login");
+            //controllo login
+            if(isset($_SESSION['user']) ) {
+                $user = $_SESSION['user'];
+                $logged = self::log($user["username"], $user["passw"]);
+            } else {
+                session_destroy();
+                header('Location: /utente/index');//rimanda agli eventi futuri
+                die();
+            }
+            
+            $id = $_SESSION["idVisita"];
+
+            $evento = eventoModel::getEventoById( $id );
+            $accessori = eventoModel::getAccessoriByEvento($id);
+            $categorie = eventoModel::getCategorieByEvento($id);
+
+            $categorieScelte = $_SESSION["categorie"];
+            $accessoriScelti = $_SESSION['accessori'];
+            //var_dump($accessori, $accessoriScelti, $categorie, $categorieScelte);
+            require_once "app/view/eventi/pagamento.php";
+
+        }
+
+        public static function inserisciCarta(){
+
+            session_start();
+            //controllo login
+            if(isset($_SESSION['user']) ) {
+                $user = $_SESSION['user'];
+                $logged = self::log($user["username"], $user["passw"]);
+            } else {
+                session_destroy();
+                header('Location: /utente/index');//rimanda agli eventi futuri
                 die();
             }
 
-            */
+            //inizializza variabili per il pulsante indietro
+            $id = $_SESSION["idVisita"];
+            $evento = eventoModel::getEventoById( $id );
+            
+            require_once "app/view/eventi/inserisciCarta.php";
         }
 
-        public function inserisciCarta(){
+        public static function testElaboraInserisciCarta(){
             session_start();
 
-            //trasformo array in modo strano, nella riscrittura va modifica
+            $id = $_SESSION["idVisita"];
 
-            $vecchieCategorie = $_SESSION['evento']['categorie']; 
+            echo "session : ",var_dump($_SESSION);
+            echo '<br>';
+            echo '<br>';
+            echo "evento : ",var_dump(eventoModel::getEventoById( $id ));
+            echo '<br>';
+            echo '<br>';
+            echo "accessoriDisponibili : ",var_dump(eventoModel::getAccessoriByEvento($id));
+            echo '<br>';
+            echo '<br>';
+            echo "categorieDisponibili : ",var_dump(eventoModel::getCategorieByEvento($id));
+            echo '<br>';
+            echo '<br>';
+            echo "categorie : ",var_dump($_SESSION["categorie"]);
+            echo '<br>';
+            echo '<br>';
+            echo "accessori : ",var_dump($_SESSION['accessori']);
+            echo '<br>';
+            echo '<br>';
+            echo "insertCarta : ",var_dump(eventoModel::insertTransizione("dfdf", "efe"));
+            echo '<br>';
+            echo '<br>';
+            echo "getLastTransizione : ",var_dump(eventoModel::getLastTransizione());
+            echo '<br>';
+            echo '<br>';
+            echo "getLastTransizione : ",var_dump(eventoModel::getLastBiglietto());
+            echo '<br>';
+            echo '<br>';
+        }
 
-            var_dump($vecchieCategorie);
-            
-            foreach ( $vecchieCategorie as $key => $value) {
-                $categorieScelte[$vecchieCategorie[$key]['codCategoria']]= $vecchieCategorie[$key] ;
+        public static function elaboraInserisciCarta(){
+            session_start();
+            //controllo login
+            if(isset($_SESSION['user']) ) {
+                $user = $_SESSION['user'];
+                $logged = self::log($user["username"], $user["passw"]);
+            } else {
+                session_destroy();
+                header('Location: /utente/index');//rimanda agli eventi futuri
+                die();
+            }
+
+            $id = $_SESSION["idVisita"];
+            $user = $_SESSION["user"];
+            $categorieScelte = $_SESSION["categorie"];
+            $accessoriScelti = $_SESSION['accessori'];
+
+            $evento = eventoModel::getEventoById( $id );
+            $accessori = eventoModel::getAccessoriByEvento($id);
+            $categorie = eventoModel::getCategorieByEvento($id);
+
+            //inserisci carta
+
+            $numCarta = $_POST["numCarta"];
+            $nome = $_POST["nome"];
+            $cognome = $_POST["cognome"];
+            $tipoCarta = "patata";
+
+            eventoModel::insertCarta($numCarta, $nome, $cognome, $tipoCarta);
+
+            //inserisci transazione
+
+            $username = $user["username"];
+
+            eventoModel::insertTransizione($username, $numCarta);
+
+            //inserisci biglietti
+
+            foreach($categorie as $categoria) {
+
+                for ($i=0; $i < $categorieScelte[ $categoria['codCategoria'] ]['qta']; $i++) { 
+
+                    $prezzo = $evento['tariffa'] - $evento['tariffa'] * $categoria['sconto'];
+                    $lastTransazione = eventoModel::getLastTransizione()[0];
+
+                    $data =$_SESSION['dataBiglietto'];
+
+                    $iolo = eventoModel::insertBiglietto($prezzo, $data, $username, $id, $lastTransazione["codTransazione"], $categoria['codCategoria']);
+                    echo "insertBiglietto : ",var_dump($iolo);
+                    echo '<br>';
+                    echo '<br>';
+                    echo "lastTransazione : ",var_dump($lastTransazione);
+                    echo '<br>';
+                    echo '<br>';
+                }
+
             }
             
-            echo "<br><br>";
-            var_dump($categorieScelte);
+
+            //inserisci accessori
+
+            $lastBiglietto = eventoModel::getLastBiglietto()[0];
 
 
-            require_once "app/template/eventi/inserisciCarta.php";
 
+            foreach ($accessori as $accessorio) {
+                if(isset($accessoriScelti [ $accessorio["codServizio"] ])){
+                    $banna =eventoModel::insertAccessorio($lastBiglietto["idBiglietto"], $accessorio["codServizio"]);
+                    echo "insertAccessorio: ",var_dump($banna);
+                    echo '<br>';
+                    echo '<br>';
+                }
+            }
 
+            header("Location: /eventi/buonaVisita");
         }
+
+        public static function buonaVisita(){
+            session_start();
+            //controllo login
+            if(isset($_SESSION['user']) ) {
+                $user = $_SESSION['user'];
+                $logged = self::log($user["username"], $user["passw"]);
+            } else {
+                session_destroy();
+                header('Location: /utente/index');//rimanda agli eventi futuri
+                die();
+            }
+            require_once "app/view/eventi/buonaVisita.php";
+        }
+
+        
+
+
 
         //link vari
 
@@ -257,6 +425,50 @@
             die();
         }
         
+
+        private static function testInsertTransazione($args){
+            $user = $args[0];
+            $numCarta = $args[1];
+
+            $result = eventoModel::insertTransizione($user, $numCarta);
+            var_dump($user,$numCarta, $result);
+        }
+
+        private static function testInsertBiglietto($args){ // http://localhost/eventi/testInsertBiglietto/12/2024-12-23/aaaaaaaa/2/5/1
+            var_dump($args);
+            $prezzo = $args[0];
+            $dataValidita = $args[1];
+            $utente = $args[2];
+            $idVisita = $args[3];
+            $codTransazione = $args[4];
+            $codCategoria = $args[5];
+
+            $result = eventoModel::insertBiglietto($prezzo, $dataValidita, $utente, $idVisita, $codTransazione, $codCategoria);
+            var_dump($prezzo, $dataValidita, $utente, $codTransazione, $codCategoria, $result);
+        }
+
+        private static function testInsertAccessorio($args){ // http://localhost/eventi/testInsertAccessorio/8/2 cambiare con valori a piacere
+            var_dump($args);
+            $idBiglietto = $args[0];
+            $codServizio = $args[1];
+
+            $result = eventoModel::insertAccessorio($idBiglietto, $codServizio);
+            var_dump($idBiglietto, $codServizio, $result);
+        }
+
+        private static function testInsertCarta($args){ // http://localhost/eventi/testInsertCarta/76597976/PPoldoo/Cognome/VIAS cambiare con valori a piacere
+            var_dump($args);
+            $numCarta = $args[0];
+            $nome = $args[1];
+            $cognome = $args[2];
+            $tipoCarta = $args[3];
+
+            $result = eventoModel::insertCarta($numCarta, $nome, $cognome, $tipoCarta);
+            var_dump($numCarta, $nome, $cognome, $tipoCarta, $result);
+        }
+        
+
+
         
 
     }

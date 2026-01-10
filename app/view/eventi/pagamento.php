@@ -103,7 +103,7 @@
         <div class="col"></div>
         <div id="content" class="col-10">
           <div class="col d-flex justify-content-start">
-            <a href="dettagliEvento" id="bttn" class="btn btn-outline-light btn-rounded btn-lg">Indietro</a>
+            <?php echo'<a href="acquistaBiglietto/'.$evento["idVisita"].'" id="bttn" class="btn btn-outline-light btn-rounded btn-lg">Indietro</a>'; ?> 
           </div>
 
           <div id="center">
@@ -114,37 +114,70 @@
               <div class="card-body">
                 <h5 class="card-title" style="font-size:250%"><b>Biglietti:</b></h5>
                 <?php
-                  echo '<div class="row justify-content-center align-items-center">';
-                  echo '<div class="col text-center">';
-                  echo '<h4>Biglietto, €XX.XX x 2</h4>';
-                  echo '</div>';
-                  echo '<div class="col text-center">';
-                  echo '<h6 class="ms-5">€ XX.XX</h6>';
-                  echo '</div>';
-                  echo '</div><!-- fine row -->';
-                  echo '<br>';
+                  $totale = 0;
+
+                  foreach ($categorie as $CategoriaDisponibile) {
+                      
+                      foreach ($categorieScelte as $CategoriaScelta) {
+
+                          if( isset($CategoriaDisponibile["codCategoria"], $CategoriaScelta["codCategoria"]) 
+                              && $CategoriaDisponibile["codCategoria"] == $CategoriaScelta["codCategoria"]
+                              && $CategoriaScelta["qta"] > 0){
+                              echo '<div class="row justify-content-center align-items-center">';
+                              echo '<div class="col text-center">';
+                              $prezzo = $evento["tariffa"] - $evento["tariffa"] * $CategoriaDisponibile["sconto"];
+                              echo '<h4>'.$CategoriaDisponibile["descrizione"].' €'.$prezzo.' x '.$CategoriaScelta["qta"].' </h4>';
+                              echo '</div>';
+                              echo '<div class="col text-center">';
+                              echo '<h6 class="ms-5">€ '.$prezzo*$CategoriaScelta["qta"].'</h6>';
+                              echo '</div>';
+                              echo '</div><!-- fine row -->';
+                              echo '<br>';
+                              $totale+= (float)$prezzo*$CategoriaScelta["qta"];
+                          }
+                          
+                      }
+
+                  }
                 ?>
               </div>
             </div>
             <!-- fine card biglietti -->
             <br>
-            <!-- card servizi -->
-            <div class="card" style="width: 100%;">
-              <div class="card-body">
-                <h5 class="card-title" style="font-size:250%"><b>Accessori:</b></h5>
-                <?php
-                  echo '<div class="row justify-content-center align-items-center">';
-                  echo '<div class="col text-center">';
-                  echo '<h4>Accessorio, €XX.XX x 2</h4>';
-                  echo '</div>';
-                  echo '<div class="col text-center">';
-                  echo '<h6 class="ms-5">€ XX.XX</h6>';
-                  echo '</div>';
-                  echo '</div><!-- fine row -->';
-                  echo '<br>';
+
+            <?php           
+
+                    if(is_array($accessoriScelti)){
+            echo '<!-- card servizi -->
+                          <div class="card" style="width: 100%;">
+                            <div class="card-body">
+                              <h5 class="card-title" style="font-size:250%"><b>Accessori:</b></h5>';
+                
+                      foreach ($accessori as $accessorioDisponibile) {
+
+                        foreach ($accessoriScelti as $accessorioScelto) {
+                          if(isset($accessorioScelto["codServizio"], $accessorioDisponibile["codServizio"]) 
+                          && $accessorioScelto["codServizio"] == $accessorioDisponibile["codServizio"]){
+                            echo '<div class="row justify-content-center align-items-center">';
+                            echo '<div class="col text-center">';
+                            $prezzo = $accessorioDisponibile["prezzoAPersona"];
+                            echo '<h4>'.$accessorioDisponibile["descrizione"].' € '.$prezzo.'</h4>';
+                            echo '</div>';
+                            echo '<div class="col text-center">';
+                            echo '<h6 class="ms-5">€'.$prezzo.'</h6>';
+                            echo '</div>';
+                            echo '</div><!-- fine row -->';
+                            echo '<br>';
+                            $totale+=(float)$prezzo;
+                          }
+                        }
+                      }
+
+                      echo '</div>
+                      </div>';
+                    }
                 ?>
-              </div>
-            </div>
+              
             <!-- fine card servizi  -->
             <br>
             <!-- card totale -->
@@ -155,14 +188,14 @@
                     <h5 class="card-title" style="font-size:270%"><b>Totale:</b></h5>
                   </div>
                   <div class="col text-center d-flex align-items-center">
-                    <h6 style="margin: 0 auto; width:70%; font-size:190%"><?php echo '€ XX.XX'; ?><'/h6>
+                    <h6 style="margin: 0 auto; width:70%; font-size:190%"><?php echo "€ $totale"; ?></h6>
                   </div>
                 </div><!-- fine row -->
               </div>
             </div>
             <!-- fine card totale -->
             <br><br>
-            <a href="#" class="btn btn-light btn-lg">Checkout</a>
+            <a href="inserisciCarta" class="btn btn-light btn-lg">Checkout</a>
 
           </div><!-- fine #center -->
 
